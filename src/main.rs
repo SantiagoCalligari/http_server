@@ -1,9 +1,16 @@
 use std::net::{TcpListener, TcpStream};
+use std::io::{Read, Write};
+use std::str;
 
-fn handle_connection(stream: &TcpStream) {
-    let mut buffer = [0, 512];
-    stream.write("HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 12\n\nHello World!");
+fn handle_connection(mut stream: &TcpStream)  {
+    let mut buffer = [0; 512];
+    stream.write(b"HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 12\n\nHello World!");
     println!("You are connected");
+    loop {
+        stream.read(&mut buffer);
+        let buffer = str::from_utf8(&buffer).unwrap();
+        println!("{}",buffer);
+    }
 }
 
 fn main() -> std::io::Result<()> {
@@ -11,7 +18,6 @@ fn main() -> std::io::Result<()> {
     for stream in listener.incoming() {
       match stream {
           Ok(stream) => {
-              let mut stream = stream;
               handle_connection(&stream);
           }
           Err(e) => {
