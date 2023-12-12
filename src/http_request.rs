@@ -6,13 +6,17 @@ pub enum Method {
     POST,
 }
 
-pub async fn return_method(fullstring: &str) -> Option<Method> {
-    let request = &fullstring[0..fullstring.find(' ').unwrap()];
-    match request {
+pub async fn get_method(fullstring: &str) -> (Option<Method>, &str) {
+    let (request, tail) = match fullstring.split_once(' ') {
+        Some(n) => n,
+        None => ("", ""),
+    };
+    let method = match request {
         "GET" => Some(Method::GET),
         "PUT" => Some(Method::PUT),
         "HEAD" => Some(Method::HEAD),
         "POST" => Some(Method::POST),
         _ => None,
-    }
+    };
+    (method, tail)
 }
