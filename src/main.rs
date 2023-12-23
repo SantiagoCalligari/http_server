@@ -3,10 +3,9 @@ use std::str;
 use tokio::net::{TcpListener, TcpStream};
 mod http_request;
 
-async fn handle_request(request: &str) {
-    let mut request_lines = request.lines();
-    let (method, tail) = http_request::get_method(&request_lines.next().unwrap()).await;
-    match method {
+async fn handle_request(raw_request: &str) {
+    let mut request:HttpRequest = parse_request(raw_request);
+    match request.method {
         Some(request) => println!("The request is:{:?}, the tail is:{}", request, tail),
         None => println!("The request is not implemented"),
     }
