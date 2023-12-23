@@ -12,12 +12,12 @@ async fn handle_request(raw_request: &str, stream: &TcpStream) {
         .unwrap();
 
     //12\n\nHello World!\n\0",
-    let response = match &request.method.unwrap()[..] {
-        "GET" => b"21\n\nThis is a GET request\n\0 ",
-        "POST" => b"22\n\nThis is a POST request\n\0",
-        "PUT" => b"21\n\nThis is a PUT request\n\0 ",
-        "HEAD" => b"22\n\nThis is a HEAD request\n\0",
-        _ => b"22\n\nThis is nt implemented\n\0",
+    let response = match request.method {
+        "GET" => b"24\n\nThis is a  GET request \n",
+        "POST" => b"24\n\nThis is a  POST request\n",
+        "PUT" => b"24\n\nThis is a  PUT request \n",
+        "HEAD" => b"24\n\nThis is a  HEAD request\n",
+        _ => b"24\n\nThis is nt implemented \n",
     };
 
     stream.writable().await.unwrap();
