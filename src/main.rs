@@ -3,23 +3,19 @@ use std::str;
 use tokio::net::{TcpListener, TcpStream};
 mod http_reply;
 mod http_request;
+use crate::http_reply::{get_reply, head_reply, post_reply, put_reply, reply_error};
 use crate::http_request::{parse_request, HttpRequest};
 
 async fn handle_request(raw_request: &str, stream: &TcpStream) {
     let request: HttpRequest = parse_request(raw_request).await;
-    stream.writable().await.unwrap();
-    stream
-        .try_write(b"HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length:")
-        .unwrap();
-
     //12\n\nHello World!\n\0",
     match request.method {
-        "GET" => b"24\n\nThis is a  POST request\n",
-        "POST" => b"24\n\nThis is a  POST request\n",
-        "PUT" => b"24\n\nThis is a  PUT request \n",
-        "HEAD" => b"24\n\nThis is a  HEAD request\n",
-        _ => b"24\n\nThis is nt implemented \n",
-    };
+        "GET" => get_reply(&stream, request).await,
+        "POST" => post_reply(&stream, request).await,
+        "PUT" => put_reply(&stream, request).await,
+        "HEAD" => head_reply(&stream, request).await,
+        _ => reply_error(&stream, request).await,
+    }
 }
 
 async fn handle_connection(stream: TcpStream) -> std::io::Result<()> {

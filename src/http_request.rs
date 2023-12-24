@@ -45,7 +45,7 @@ async fn get_method_path_version(fullstring: &str) -> (&str, &str, &str) {
     let mut split = fullstring.split_whitespace();
     (
         split.next().unwrap_or(""),
-        split.next().unwrap_or(""),
+        &split.next().unwrap_or("")[1..],
         split.next().unwrap_or(""),
     )
 }
