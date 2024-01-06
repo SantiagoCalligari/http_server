@@ -4,8 +4,22 @@ use std::io::prelude::*;
 use std::path::Path;
 use tokio::net::TcpStream;
 
+async fn write_response_header(stream: &TcpStream, extension: &str) {
+    write_to_stream(&stream, b"HTTP/1.1 200 OK\nContent-Type: ").await;
+
+    match extension {
+        "html" => write_to_stream(&stream, b"text/html; charset=UTF-8").await,
+
+        "css" => write_to_stream(&stream, b"text/css; charset=UTF-8").await,
+        "js" => write_to_stream(&stream, b"text/javascript; charset=UTF-8").await,
+
+        _ => write_to_stream(&stream, b"text/plain; charset=UTF-8").await,
+    }
+    write_to_stream(&stream, b"\nContent-Length: ").await;
+}
+
 async fn write_to_stream(stream: &TcpStream, msg: &[u8]) {
-    println!("{}", std::str::from_utf8(msg).unwrap());
+    print!("{}", std::str::from_utf8(msg).unwrap());
     stream.writable().await.unwrap();
     stream.try_write(msg).unwrap();
 }
@@ -16,34 +30,10 @@ async fn write_file(stream: &TcpStream, path: &str) {
     println!("{}", display);
     let extension = path.extension().unwrap().to_str().unwrap();
     let mut file = File::open(path).unwrap();
-    let size = file.metadata().unwrap().len();
-
-    match extension {
-        "html" => {
-            write_to_stream(
-                &stream,
-                b"HTTP/1.1 200 OK\nContent-Type: text/html; charset=UTF-8\nContent-Length: ",
-            )
-            .await
-        }
-
-        "css" => {
-            write_to_stream(
-                &stream,
-                b"HTTP/1.1 200 OK\nContent-Type: text/css; charset=UTF-8\nContent-Length: ",
-            )
-            .await
-        }
-
-        _ => {
-            write_to_stream(
-                &stream,
-                b"HTTP/1.1 200 OK\nContent-Type: text/plain; charset=UTF-8\nContent-Length: ",
-            )
-            .await
-        }
-    }
     let mut file_lines = String::new();
+    let size = file.metadata().unwrap().len();
+    write_response_header(&stream, extension).await;
+
     match file.read_to_string(&mut file_lines) {
         Err(why) => println!("Couldn't read {}: {}", display, why),
         Ok(_) => {
@@ -52,6 +42,7 @@ async fn write_file(stream: &TcpStream, path: &str) {
             write_to_stream(&stream, file_lines.as_bytes()).await;
         }
     };
+    write_to_stream(&stream, b"\n").await;
 }
 
 pub async fn get_reply(stream: &TcpStream, request: HttpRequest<'_>) {
